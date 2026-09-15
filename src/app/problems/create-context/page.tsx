@@ -1,13 +1,17 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ContextWizard } from "@/components/context/ContextWizard";
 import { ProblemContext } from "@/types/context";
 import { CheckCircle2, ChevronRight, ListChecks, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import apiClient from "@/services/api/client";
 
 export default function CreateContextPage() {
-    const [finalized, setFinalized] = useState<ProblemContext | null>(null);
+    const [finalized, setFinalized] = useState<any>(null);
+    const router = useRouter();
+    const [analyzing, setAnalyzing] = useState(false);
 
     if (finalized) {
         return (
@@ -40,11 +44,25 @@ export default function CreateContextPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" disabled={analyzing}>
                         <Link href="/problems"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Problems</Link>
                     </Button>
-                    <Button disabled>
-                        Deep Analysis (Phase 3) <ChevronRight className="ml-2 h-4 w-4" />
+                    <Button
+                        disabled={analyzing}
+                        onClick={async () => {
+                            setAnalyzing(true);
+                            try {
+                                // Assuming the Backend maps _id identically 
+                                const ctxId = finalized._id;
+                                await apiClient.post(`/contexts/${ctxId}/analyze`);
+                                router.push(`/problems/${ctxId}/analysis`);
+                            } catch (err) {
+                                alert("Analysis Failed, backend offline.");
+                                setAnalyzing(false);
+                            }
+                        }}
+                    >
+                        {analyzing ? "Generating Analysis..." : "Analyze Context (Phase 4)"} <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                 </div>
             </div>

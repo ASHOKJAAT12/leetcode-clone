@@ -43,9 +43,9 @@ export function ContextWizard({ onComplete }: { onComplete: (ctx: ProblemContext
         }
     }
 
-    const nextParams = () => {
+    const nextParams = async () => {
         if (currentStep === STEPS.length - 1) {
-            const fin = contextService.finalizeContext(context as ProblemContext);
+            const fin = await contextService.finalizeContext(context as ProblemContext);
             onComplete(fin);
         } else {
             setCurrentStep(c => c + 1);
