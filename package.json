@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"npm run dev --prefix backend\"",
+    "dev": "next dev",
     "build": "next build",
-    "start": "concurrently \"next start\" \"npm run start --prefix backend\"",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {

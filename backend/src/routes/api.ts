@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getLanguages, getDomains, getTags, getCategories } from "../controllers/masterDataController";
 import { createContext, getContexts, getContextById, updateContext, deleteContext, validateContextPayload } from "../controllers/contextController";
 import { analyzeContext, getContextAnalysis, getAnalysisById } from "../controllers/analysisController";
+import { generateProblem, getProblemBySlug, getProblems } from "../controllers/problemController";
 
 const router = Router();
 
@@ -19,9 +20,14 @@ router.put("/contexts/:id", updateContext);
 router.delete("/contexts/:id", deleteContext);
 router.post("/contexts/:id/validate", validateContextPayload);
 
-// Analysis Routes
+// Deep Analysis Routes
 router.post("/contexts/:id/analyze", analyzeContext);
 router.get("/contexts/:id/analysis", getContextAnalysis);
 router.get("/analyses/:id", getAnalysisById);
+
+// Problem Generation Routes
+router.post("/contexts/:id/generate-problem", generateProblem);
+router.get("/problems", getProblems);
+router.get("/problems/:slug", getProblemBySlug);
 
 export default router;

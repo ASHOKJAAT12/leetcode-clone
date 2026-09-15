@@ -4,16 +4,18 @@ import apiClient from "@/services/api/client";
 import { useParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Badge } from "@/components/ui/Badge";
-import { CheckCircle2, ChevronRight, Hash, Clock, Server, Layers, Cpu, Settings2, FileText, AlertTriangle, AlertCircle, Goal, Link as LinkIcon, Check } from "lucide-react";
+import { CheckCircle2, ChevronRight, Hash, Clock, Server, Layers, Cpu, Settings2, FileText, AlertTriangle, AlertCircle, Goal, Link as LinkIcon, Check, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export default function AnalysisDashboard() {
     const params = useParams();
-    const id = params?.id as string;
+    const router = useRouter();
+    const id = params?.slug as string;
     const [analysis, setAnalysis] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [generating, setGenerating] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -70,11 +72,23 @@ export default function AnalysisDashboard() {
                 </div>
 
                 <div className="flex gap-2">
-                    <Button variant="outline" asChild>
+                    <Button variant="outline" asChild disabled={generating}>
                         <Link href="/problems">Cancel</Link>
                     </Button>
-                    <Button disabled>
-                        Continue to Problem Generation (Phase 5)
+                    <Button
+                        disabled={generating}
+                        onClick={async () => {
+                            setGenerating(true);
+                            try {
+                                const { data } = await apiClient.post(`/contexts/${id}/generate-problem`);
+                                router.push(`/problems/${data.slug}`);
+                            } catch (err: any) {
+                                alert(err.response?.data?.error || "Failed to generate problem cleanly.");
+                                setGenerating(false);
+                            }
+                        }}
+                    >
+                        {generating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Preparing Problem...</> : "Generate Real-World Problem"}
                     </Button>
                 </div>
             </div>
