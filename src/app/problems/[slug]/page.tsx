@@ -3,10 +3,14 @@ import React, { useEffect, useState } from "react";
 import apiClient from "@/services/api/client";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { AlertCircle, BookOpen, Layers, ChevronRight, Play, Send, Settings2 } from "lucide-react";
+import { AlertCircle, ChevronRight, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
+import { ProblemPanel } from "@/components/workspace/ProblemPanel";
+import { EditorPanel } from "@/components/workspace/EditorPanel";
+import { OutputPanel } from "@/components/workspace/OutputPanel";
+import { useCodeEditor } from "@/hooks/useCodeEditor";
+import { useExecution } from "@/hooks/useExecution";
 
 export default function ProblemWorkspacePage() {
     const params = useParams();
@@ -31,6 +35,10 @@ export default function ProblemWorkspacePage() {
         fetchProblem();
     }, [slug]);
 
+    // Lifted Editor + Execution states
+    const editor = useCodeEditor(problem);
+    const exec = useExecution(problem?._id, editor.activeLanguage, editor.currentCode);
+
     if (loading) {
         return (
             <div className="container mx-auto px-4 py-32 flex flex-col items-center justify-center">
@@ -52,114 +60,52 @@ export default function ProblemWorkspacePage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 h-[calc(100vh-4rem)] flex flex-col">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 border-b border-neutral-200 dark:border-neutral-800 pb-4">
-                <div>
-                    <div className="flex items-center gap-2 mb-2 text-sm text-neutral-500 dark:text-neutral-400">
-                        <Link href="/problems" className="hover:text-indigo-600 transition-colors">Problems</Link> <ChevronRight className="h-3 w-3" />
-                        <span className="text-neutral-900 dark:text-neutral-100">{problem.title}</span>
-                    </div>
-                    <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-                        {problem.title}
-                        <Badge variant={problem.difficulty === 'Hard' ? 'destructive' : problem.difficulty === 'Medium' ? 'default' : 'secondary'}>{problem.difficulty}</Badge>
-                    </h1>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" disabled className="text-neutral-500 cursor-not-allowed hidden md:flex">
-                        <Play className="w-4 h-4 mr-2" /> Run Code (Phase 6)
-                    </Button>
-                    <Button disabled className="cursor-not-allowed">
-                        <Send className="w-4 h-4 mr-2 bg-indigo-500 rounded p-0.5 text-white" /> Submit Solution (Phase 6)
-                    </Button>
+        <div className="h-[calc(100vh-4rem)] bg-neutral-100 dark:bg-neutral-900 flex flex-col">
+            <div className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex items-center px-4 shrink-0 justify-between">
+                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    <LayoutTemplate className="w-4 h-4 text-indigo-500 mr-1" />
+                    <Link href="/problems" className="hover:text-indigo-600 transition-colors">Problems</Link>
+                    <ChevronRight className="h-3 w-3" />
+                    <span className="text-neutral-900 dark:text-neutral-100 font-medium truncate max-w-[300px]">{problem.title}</span>
                 </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
+            <div className="flex-1 overflow-hidden p-2">
+                <PanelGroup orientation="horizontal" className="h-full rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                    {/* LEFTPANEL: Problem Description */}
+                    <Panel defaultSize={35} minSize={20} maxSize={50}>
+                        <ProblemPanel problem={problem} />
+                    </Panel>
 
-                {/* Left Panel: Description */}
-                <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 flex flex-col overflow-hidden">
-                    <Tabs defaultValue="description" className="w-full flex-1 flex flex-col">
-                        <div className="border-b border-neutral-200 dark:border-neutral-800 p-2">
-                            <TabsList className="grid grid-cols-3 bg-neutral-100 dark:bg-neutral-900 p-1 w-[300px]">
-                                <TabsTrigger value="description">Description</TabsTrigger>
-                                <TabsTrigger value="editorial">Editorial</TabsTrigger>
-                                <TabsTrigger value="submissions">Submissions</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        <TabsContent value="description" className="flex-1 overflow-y-auto p-6 m-0 prose dark:prose-invert max-w-none">
-                            <div className="flex gap-2 mb-6">
-                                <Badge variant="outline"><Layers className="w-3 h-3 mr-1" /> {problem.domain}</Badge>
-                                {problem.skills?.map((skill: string) => <Badge variant="secondary" key={skill}>{skill}</Badge>)}
-                            </div>
+                    <PanelResizeHandle className="w-1.5 bg-neutral-200 dark:bg-neutral-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors cursor-col-resize active:bg-indigo-500" />
 
-                            <div className="mb-8">
-                                <h3 className="text-lg border-b border-neutral-200 dark:border-neutral-800 pb-2 flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-500" /> Real-World Background</h3>
-                                <p className="text-neutral-600 dark:text-neutral-300 text-sm mt-3">{problem.realWorldScenario?.background}</p>
-                            </div>
+                    {/* RIGHTPANEL: Editor + Output Split */}
+                    <Panel defaultSize={65}>
+                        <PanelGroup orientation="vertical">
+                            <Panel defaultSize={65} minSize={30}>
+                                <EditorPanel
+                                    problem={problem}
+                                    language={editor.activeLanguage}
+                                    code={editor.currentCode}
+                                    onCodeChange={editor.setCode}
+                                    onLanguageChange={editor.switchLanguage}
+                                    onReset={editor.resetCode}
+                                    hasUnsavedChanges={editor.hasUnsavedChanges}
+                                    onRun={() => exec.runCode()}
+                                    onSubmit={exec.submitCode}
+                                    isRunning={exec.isRunning}
+                                    isSubmitting={exec.isSubmitting}
+                                />
+                            </Panel>
 
-                            <div className="mb-8">
-                                <h3 className="text-lg border-b border-neutral-200 dark:border-neutral-800 pb-2">Objective</h3>
-                                <p className="text-neutral-800 dark:text-neutral-200 font-medium text-base mt-3 border-l-2 border-indigo-500 pl-3">{problem.realWorldScenario?.objective}</p>
-                            </div>
+                            <PanelResizeHandle className="h-1.5 bg-neutral-200 dark:bg-neutral-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors cursor-row-resize active:bg-indigo-500 z-10" />
 
-                            {problem.examples?.map((ex: any, idx: number) => (
-                                <div key={idx} className="mb-6">
-                                    <h4 className="font-semibold text-sm mb-2">Example {idx + 1}:</h4>
-                                    <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-lg p-4 font-mono text-xs">
-                                        <div className="mb-2"><span className="text-neutral-500 select-none">Input:</span><br />
-                                            {ex.input.split('\n').map((line: string, i: number) => <div key={i}>{line}</div>)}
-                                        </div>
-                                        <div className="mb-2"><span className="text-neutral-500 select-none">Output:</span><br />{ex.output}</div>
-                                        <div><span className="text-neutral-500 select-none">Explanation:</span><br /><span className="text-neutral-600 dark:text-neutral-400 font-sans">{ex.explanation}</span></div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            <div className="mb-8">
-                                <h3 className="text-lg border-b border-neutral-200 dark:border-neutral-800 pb-2">Constraints</h3>
-                                <ul className="text-sm mt-3 text-neutral-600 dark:text-neutral-300 list-disc pl-5 space-y-1 font-mono text-xs rounded bg-neutral-50 dark:bg-neutral-900 p-4 border border-neutral-100 dark:border-neutral-800">
-                                    {problem.constraints?.explicit?.map((c: string, idx: number) => <li key={idx} className="mb-1">{c}</li>)}
-                                    {problem.constraints?.inferred?.map((c: string, idx: number) => <li key={idx} className="text-neutral-500">{c}</li>)}
-                                </ul>
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="editorial" className="p-6">
-                            <div className="bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900 flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                                <div>
-                                    <h4 className="font-semibold mb-1">Editorial Content Locked</h4>
-                                    <p className="text-sm">Official Solutions and AI Hint Coaching are scheduled for Phase 8.</p>
-                                </div>
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="submissions" className="p-6">
-                            <p className="text-neutral-500 text-sm">Submission Tracking (Phase 6)</p>
-                        </TabsContent>
-                    </Tabs>
-                </div>
-
-                {/* Right Panel: Code Editor Stub */}
-                <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl bg-[#1e1e1e] flex flex-col overflow-hidden relative">
-                    <div className="bg-[#2d2d2d] py-2 px-4 flex justify-between items-center z-10 w-full shrink-0 border-b border-black/20">
-                        <Badge variant="outline" className="text-xs bg-[#1e1e1e] text-neutral-300 border-neutral-700 hover:bg-[#1e1e1e] uppercase">{problem.language}</Badge>
-                        <div className="flex gap-2">
-                            <span className="text-neutral-500 text-xs">VIM</span>
-                            <span className="text-neutral-500 text-xs">Monaco (Phase 6)</span>
-                        </div>
-                    </div>
-                    <div className="flex-1 p-4 overflow-auto">
-                        <div className="relative">
-                            <pre className="text-sm font-mono text-neutral-300 w-full h-full pb-8 whitespace-pre-wrap">{problem.starterCode}</pre>
-                        </div>
-                    </div>
-
-                    <div className="absolute inset-x-0 bottom-0 top-12 bg-neutral-950/60 backdrop-blur-[1px] flex flex-col items-center justify-center p-6 text-center z-20">
-                        <Settings2 className="w-8 h-8 text-indigo-400 mb-3 opacity-50" />
-                        <h3 className="text-white font-semibold mb-1 opacity-90 text-sm tracking-wide">JUDGE EXECUTION OFFLINE</h3>
-                        <p className="text-neutral-400 text-xs max-w-[200px] leading-relaxed">Phase 6 introduces Monaco Code Editor integration and Judge0 execution sandboxes.</p>
-                    </div>
-                </div>
-
+                            <Panel defaultSize={35} minSize={15}>
+                                <OutputPanel exec={exec} />
+                            </Panel>
+                        </PanelGroup>
+                    </Panel>
+                </PanelGroup>
             </div>
         </div>
     );

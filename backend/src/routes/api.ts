@@ -2,7 +2,9 @@ import { Router } from "express";
 import { getLanguages, getDomains, getTags, getCategories } from "../controllers/masterDataController";
 import { createContext, getContexts, getContextById, updateContext, deleteContext, validateContextPayload } from "../controllers/contextController";
 import { analyzeContext, getContextAnalysis, getAnalysisById } from "../controllers/analysisController";
-import { generateProblem, getProblemBySlug, getProblems } from "../controllers/problemController";
+import { generateProblem, getProblems, getProblemBySlug } from "../controllers/problemController";
+import { runCode } from "../controllers/executionController";
+import { submitCode, getSubmissions, getSubmissionById } from "../controllers/submissionController";
 
 const router = Router();
 
@@ -29,5 +31,11 @@ router.get("/analyses/:id", getAnalysisById);
 router.post("/contexts/:id/generate-problem", generateProblem);
 router.get("/problems", getProblems);
 router.get("/problems/:slug", getProblemBySlug);
+
+// Phase 7: Judge Execution & Submission Layer
+router.post("/execution/run", runCode);
+router.post("/submissions", submitCode);
+router.get("/submissions", getSubmissions);
+router.get("/submissions/:id", getSubmissionById);
 
 export default router;
