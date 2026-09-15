@@ -8,9 +8,14 @@ export default function ProblemsPage() {
     return (
         <div className="container mx-auto px-4 py-8 md:px-6">
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Problems</h1>
-                    <p className="text-neutral-500 dark:text-neutral-400">Practice with real-world scenarios.</p>
+                <div className="flex w-full justify-between items-start md:items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Problems</h1>
+                        <p className="text-neutral-500 dark:text-neutral-400">Practice with real-world scenarios.</p>
+                    </div>
+                    <Button asChild className="hidden sm:inline-flex shrink-0 ml-4">
+                        <Link href="/problems/create-context">Create Real-World Challenge</Link>
+                    </Button>
                 </div>
                 <div className="relative w-full md:w-72">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500 dark:text-neutral-400" />

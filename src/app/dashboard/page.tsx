@@ -57,6 +57,22 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
+            <div className="mb-8">
+                <Card className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900 shadow-none">
+                    <CardHeader>
+                        <CardTitle className="text-xl">Create a New Challenge</CardTitle>
+                        <CardDescription className="text-base text-neutral-600 dark:text-neutral-400">
+                            Choose your language, domain and skills to prepare a personalized real-world problem.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button asChild>
+                            <Link href="/problems/create-context">Create Context</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+
             <h2 className="text-xl font-bold tracking-tight mb-4">Recommended Problems</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
